@@ -21,7 +21,7 @@ long typeImageCreate(typeImage* parent, unsigned long width, unsigned long heigh
     if (parent == 0)
         return 0;
 
-    length = width * length;
+    length = width * height;
     datalength = length * sizeof(unsigned long);
     data = malloc(datalength);
 

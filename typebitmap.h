@@ -62,6 +62,8 @@ long typeBitmapCreate(typeBitmap* parent, unsigned long width, unsigned long hei
     parent->bitmapHeight = 0;
     parent->bitmapData = 0;
 
+    return 0;
+
 }
 
 //ÏÔÊ¾ bitmap

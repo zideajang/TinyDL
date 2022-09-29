@@ -14,17 +14,17 @@ static unsigned char readByte(FILE* fp)
     return fgetc(fp);
 }
 
-static unsigned char readWord(FILE* fp)
+static unsigned short readWord(FILE* fp)
 {
     // word 表示 16-bit ，也就是 2 个字节
     return (fgetc(fp) | (fgetc(fp) << 8 ));
 }
 
 
-static unsigned char readDWord(FILE* fp)
+static unsigned long readDWord(FILE* fp)
 {
     // Double Word 
-    return (fgetc(fp) | (fgetc(fp) << 8) | fgetc(fp) << 16) | (fgetc(fp) << 24));
+    return (fgetc(fp) | (fgetc(fp) << 8) | (fgetc(fp) << 16) | (fgetc(fp) << 24));
 }
 
 //加载 Bmp 格式文件
@@ -72,65 +72,55 @@ long typeFileBmpLoad(typeImage* parent, char* filename)
 
         unsigned long I, J, K;
         unsigned long r, g, b;
+        unsigned char* buffer;
 
-        unsigned long length = bfInfo.biWidth * bfInfo.biHeight;
-        unsigned long datalength = sizeof(unsigned long) * length;
-        unsigned char* buffer = (unsigned char*)malloc(datalength);
-
-        if (buffer == 0)
-            break;
-
-        for (J = 0; J < bfInfo.biHeight; J++)
+        if (typeImageCreate(parent, bfInfo.biWidth, bfInfo.biHeight))
         {
-            fseek(fp, bfHeader.bfOffBits + (bfInfo.biHeight - J + 1) * (paddedRowSize), SEEK_SET);
-
-            for (I = 0; I < bfInfo.biWidth; I++)
+            buffer = (unsigned char*)parent->imageData;
+            K = 0;
+            r = g = b = readByte(fp);
+            for (J = 0; J < bfInfo.biHeight; J++)
             {
-                if (bytesPerPixel == 1)
-                {
-                    r = g = b = readByte(fp);
-                }
-                else if(bytesPerPixel == 3)
-                {
-                    r = readByte(fp);
-                    g = readByte(fp);
-                    b = readByte(fp);
-                }
-                else if (bytesPerPixel == 4)
-                {
-                    r = readByte(fp);
-                    g = readByte(fp);
-                    b = readByte(fp);
-                    readByte(fp);
-                }
+                fseek(fp, bfHeader.bfOffBits + (bfInfo.biHeight - J  - 1) * (paddedRowSize), SEEK_SET);
 
-                buffer[K + 0] = r;
-                buffer[K + 1] = g;
-                buffer[K + 2] = b;
-                buffer[K + 3] = 0;
+                for (I = 0; I < bfInfo.biWidth; I++)
+                {
+                    if (bytesPerPixel == 1)
+                    {
+                        r = g = b = readByte(fp);
+                    }
+                    else if (bytesPerPixel == 3)
+                    {
+                        r = readByte(fp);
+                        g = readByte(fp);
+                        b = readByte(fp);
+                    }
+                    else if (bytesPerPixel == 4)
+                    {
+                        r = readByte(fp);
+                        g = readByte(fp);
+                        b = readByte(fp);
+                        readByte(fp);
+                    }
 
-                K += 4;
+                    buffer[K + 0] = r;
+                    buffer[K + 1] = g;
+                    buffer[K + 2] = b;
+                    buffer[K + 3] = 0;
+
+                    K += 4;
+                }
             }
-
-            if(typeBitmapCreate(parent,bfInfo.biWidth,bfInfo.biHeight,buffer))
         }
-     }
+        fclose(fp);
+        return 1;
+        }
 
     fclose(fp);
 
     return 0;
-    }
-
-
-
-
-
-
-
-
-
-
 }
+
 
 
 LRESULT CALLBACK windowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
